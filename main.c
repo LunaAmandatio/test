@@ -1,80 +1,74 @@
 #include <stdio.h>
-#define N 4
+
+#define MAX_SIZE 100  // 数组最大容量
+#define INIT_COUNT 5   // 初始有效数据个数
+
+// 全局变量：记录当前有效数据个数（需在insert/pop中更新）
+int valid_count = INIT_COUNT;
+
+// 插入函数：在pos位置（1-based）插入num，返回0成功，-1失败
+int insert(int a[], int pos, int num) {
+    // 边界检查：pos范围[1, valid_count+1]，且数组未满
+    if (pos < 1 || pos > valid_count + 1 || valid_count >= MAX_SIZE) {
+        printf("插入失败：位置超出有效范围或数组已满！\n");
+        return -1;
+    }
+    // 将pos位置及之后的元素后移一位（从后往前移）
+    for (int i = valid_count; i >= pos; i--) {
+        a[i] = a[i - 1];
+    }
+    a[pos - 1] = num;  // pos是1-based，数组下标需-1
+    valid_count++;     // 有效数据个数+1
+    printf("插入成功！当前有效数据个数：%d\n", valid_count);
+    return 0;
+}
+
+// 删除函数：删除pos位置（1-based）的元素，返回被删除值，-1表示失败
+int pop(int a[], int pos) {
+    // 边界检查：pos范围[1, valid_count]，且有效数据不为空
+    if (pos < 1 || pos > valid_count || valid_count <= 0) {
+        printf("删除失败：位置超出有效范围或无数据可删！\n");
+        return -1;
+    }
+    int deleted = a[pos - 1];  // 记录被删除值
+    // 将pos之后的元素前移一位（从前往后移）
+    for (int i = pos; i < valid_count; i++) {
+        a[i - 1] = a[i];
+    }
+    valid_count--;  // 有效数据个数-1
+    printf("删除成功！被删除值：%d，当前有效数据个数：%d\n", deleted, valid_count);
+    return deleted;
+}
+
+// 打印数组前valid_count个有效元素
+void print_array(int a[]) {
+    printf("当前有效数据：");
+    for (int i = 0; i < valid_count; i++) {
+        printf("%d ", a[i]);
+    }
+    printf("\n");
+}
 
 int main() {
-    int a[N], b[2*N];
-    int i, j, k;
-
-    // 1. 输入数组a和b
-    printf("输入数组a（%d个整数）：\n", N);
-    for (i = 0; i < N; i++) {
+    int a[MAX_SIZE];  // 定义大小为100的数组
+    // 输入前5个有效数据
+    printf("请输入前5个整数（空格分隔）：");
+    for (int i = 0; i < INIT_COUNT; i++) {
         scanf("%d", &a[i]);
     }
-    printf("输入数组b（%d个整数）：\n", 2*N);
-    for (i = 0; i < 2*N; i++) {
-        scanf("%d", &b[i]);
-    }
+    printf("初始有效数据个数：%d\n", valid_count);
+    print_array(a);
 
+    // 示例：插入测试（在第2个位置插入300）
+    insert(a, 2, 300);
+    print_array(a);  // 输出：1 300 2 3 4 5
 
-    // 2. 判断b是否包含a的连续子数组
-    int has_continuous = 0;  // 0：不包含，1：包含
-    // 遍历b中所有可能的连续N个元素起点（共2N - N + 1 = N+1种可能）
-    for (i = 0; i <= 2*N - N; i++) {
-        int match = 1;  // 假设当前子数组匹配a
-        for (j = 0; j < N; j++) {
-            if (b[i + j] != a[j]) {  // 若有一个元素不匹配，标记为不匹配
-                match = 0;
-                break;
-            }
-        }
-        if (match == 1) {  // 找到连续匹配的子数组
-            has_continuous = 1;
-            break;
-        }
-    }
+    // 示例：删除测试（删除第2个位置的元素）
+    pop(a, 2);
+    print_array(a);  // 输出：1 2 3 4 5
 
-
-    // 3. 判断b是否包含a中的每一个整数（不要求连续）
-    int has_all = 1;  // 0：不包含所有，1：包含所有
-    for (i = 0; i < N; i++) {
-        int found = 0;  // 0：a[i]不在b中，1：在b中
-        for (j = 0; j < 2*N; j++) {
-            if (b[j] == a[i]) {
-                found = 1;
-                break;
-            }
-        }
-        if (found == 0) {  // a中存在b没有的元素
-            has_all = 0;
-            break;
-        }
-    }
-
-
-    // 4. 输出a中b所没有的数
-    printf("\na中b没有的数：");
-    int missing_count = 0;
-    for (i = 0; i < N; i++) {
-        int found = 0;
-        for (j = 0; j < 2*N; j++) {
-            if (b[j] == a[i]) {
-                found = 1;
-                break;
-            }
-        }
-        if (found == 0) {
-            printf("%d ", a[i]);
-            missing_count++;
-        }
-    }
-    if (missing_count == 0) {
-        printf("无");
-    }
-
-
-    // 5. 输出判断结果
-    printf("\n\nb是否包含a的连续子数组：%s\n", has_continuous ? "是" : "否");
-    printf("b是否包含a的所有整数：%s\n", has_all ? "是" : "否");
+    // 边界测试：插入超出范围位置
+    insert(a, 10, 999);  // 有效数据仅5个，pos=10超出范围
 
     return 0;
 }
